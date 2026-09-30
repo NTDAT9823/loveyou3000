@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Chuyến Bay Về Phía Cậu — Kỷ Niệm Yêu Xa</title>
+  
+  <!-- FONT TIẾNG VIỆT CHUẨN 100% -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Patrick+Hand&display=swap&subset=vietnamese" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      background: radial-gradient(circle at 50% 10%, #ffeaf0 0%, #fff2f6 40%, #eef5ff 100%);
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      letter-spacing: -0.01em;
+    }
+    .font-handwriting {
+      font-family: 'Patrick Hand', cursive;
+      letter-spacing: 0.02em;
+    }
+    .page-screen {
+      transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .page-screen.hidden-left {
+      opacity: 0;
+      transform: translateX(-40px) scale(0.97);
+      pointer-events: none;
+      position: absolute;
+      width: 100%;
+    }
+    .page-screen.hidden-right {
+      opacity: 0;
+      transform: translateX(40px) scale(0.97);
+      pointer-events: none;
+      position: absolute;
+      width: 100%;
+    }
+    .page-screen.active {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+      position: relative;
+      pointer-events: auto;
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.6); }
+      70% { transform: scale(1.05); box-shadow: 0 0 0 16px rgba(225, 29, 72, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
+    }
+    .wax-seal {
+      animation: pulse-ring 2s infinite;
+    }
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .spin-music {
+      animation: spin-slow 6s linear infinite;
+    }
+    .perspective-1000 {
+      perspective: 1000px;
+    }
+    .transform-style-preserve-3d {
+      transform-style: preserve-3d;
+    }
+    .backface-hidden {
+      backface-visibility: hidden;
+    }
+    .rotate-y-180 {
+      transform: rotateY(180deg);
+    }
+    .polaroid-card {
+      transition: transform 0.55s cubic-bezier(0.4, 0.2, 0.2, 1);
+    }
+    .polaroid-card.flipped {
+      transform: rotateY(180deg);
+    }
+    #bgCanvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+    @keyframes floatUpFade {
+      0% { transform: translateY(0) scale(0.8); opacity: 1; }
+      100% { transform: translateY(-220px) scale(1.4); opacity: 0; }
+    }
+    .heart-float-particle {
+      position: fixed;
+      pointer-events: none;
+      z-index: 80;
+      animation: floatUpFade 1.4s ease-out forwards;
+    }
+    @keyframes slideDownFade {
+      0% { transform: translate(-50%, -20px); opacity: 0; }
+      100% { transform: translate(-50%, 0); opacity: 1; }
+    }
+    .toast-animate {
+      animation: slideDownFade 0.3s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="text-gray-700 min-h-screen flex flex-col justify-between relative selection:bg-rose-200">
+
+  <canvas id="bgCanvas"></canvas>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="scratchToast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-full shadow-lg border border-rose-200 text-rose-600 text-xs font-semibold flex items-center gap-2 hidden toast-animate max-w-[90vw] text-center">
+    <span id="toastIcon" class="text-base">🎉</span>
+    <span id="toastMsg">Cào xong rồi! Đang mở quẻ tiếp theo...</span>
+  </div>
+
+  <!-- MÀN HÌNH MỞ ĐẦU CHẠM ĐỂ MỞ THIỆP & BẬT NHẠC -->
+  <div id="startOverlay" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-rose-50/95 backdrop-blur-md px-6 text-center transition-all duration-700">
+    <div id="waxSealBtn" class="wax-seal w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-tr from-rose-500 to-pink-500 rounded-full flex items-center justify-center text-3xl sm:text-4xl text-white shadow-xl cursor-pointer hover:scale-110 active:scale-90 transition mb-6">
+      💌
+    </div>
+    <h2 class="text-2xl sm:text-3xl font-bold text-rose-600 mb-2 font-handwriting tracking-wide">Gửi Cậu Món Quà Nhỏ...</h2>
+    <p class="text-xs sm:text-sm text-gray-500 max-w-xs mb-6 font-medium leading-relaxed">Chạm vào con dấu sáp để bóc thư và lắng nghe bài hát dành riêng cho cậu nhé ✨</p>
+    <button class="bg-rose-500 text-white text-xs sm:text-sm font-bold px-7 py-3 rounded-full shadow-lg shadow-rose-300 animate-bounce">
+      CHẠM ĐỂ MỞ ➔
+    </button>
+  </div>
+
+  <!-- THẺ AUDIO CHÈN BÀI HÁT IN-LOVE -->
+  <audio id="customAudio" loop preload="auto" playsinline>
+    <source src="in-love.mp3" type="audio/mpeg">
+    <source src="YTSave_YouTube_Media_x8cz2E_nutc_In-Love_009_128k.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Top Header Navigation & Controls -->
+  <header class="relative z-30 max-w-lg md:max-w-xl mx-auto w-full px-4 pt-4 flex items-center justify-between">
+    <div class="flex items-center gap-1.5 bg-white/85 backdrop-blur-md px-3.5 py-1.5 rounded-full shadow-sm border border-rose-100 text-xs font-semibold text-rose-500">
+      <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+      <span id="chapterBadge">Chương 1/5</span>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <label title="Đổi bài hát từ máy" class="cursor-pointer bg-white/85 backdrop-blur-md p-2 rounded-full shadow-sm border border-rose-100 text-rose-500 hover:scale-105 active:scale-95 transition flex items-center justify-center">
+        <span class="text-xs">📂</span>
+        <input type="file" id="localAudioInput" accept="audio/*" class="hidden">
+      </label>
+
+      <button id="musicBtn" class="flex items-center gap-2 bg-white/85 backdrop-blur-md px-3.5 py-1.5 rounded-full shadow-sm border border-rose-100 text-rose-500 text-xs font-medium hover:scale-105 active:scale-95 transition">
+        <span id="musicDiscIcon" class="text-base">🎵</span>
+        <span id="musicText">Bật nhạc</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Multi-Page Container -->
+  <main class="relative z-20 max-w-lg md:max-w-xl mx-auto w-full px-4 py-4 flex-1 flex flex-col justify-center">
+
+    <!-- CHƯƠNG 1 -->
+    <section id="page-1" class="page-screen active text-center flex flex-col items-center">
+      <div class="w-full bg-white/90 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-xl border border-rose-100 flex flex-col items-center">
+        <div class="text-xs uppercase tracking-widest text-rose-500 font-bold mb-2">Thư Gửi Từ Quê Nhà 🇻🇳 ✈️ 🇨🇳</div>
+        <h1 class="text-3xl sm:text-5xl font-handwriting text-rose-600 font-bold mb-3 tracking-wide">
+          Gửi Cô Gái Của Tớ
+        </h1>
+        <p class="text-xs sm:text-sm text-gray-500 max-w-xs sm:max-w-md mb-8 leading-relaxed font-normal">
+          Một bất ngờ nho nhỏ vượt hàng ngàn cây số gửi tới cô du học sinh kiên cường ở Trung Quốc.
+        </p>
+
+        <div id="openLetterBtn" class="cursor-pointer group relative w-44 sm:w-52 h-32 sm:h-40 bg-gradient-to-tr from-rose-100 to-rose-200 rounded-2xl flex items-center justify-center border-2 border-dashed border-rose-300 shadow-md hover:scale-105 active:scale-95 transition-all">
+          <div class="text-center">
+            <div class="wax-seal w-14 h-14 sm:w-16 sm:h-16 bg-rose-500 rounded-full flex items-center justify-center mx-auto text-xl sm:text-2xl text-white shadow-lg group-hover:scale-110 transition">
+              💌
+            </div>
+            <span class="text-xs sm:text-sm text-rose-600 font-bold mt-2 block group-hover:underline">Chạm để mở trang sách</span>
+          </div>
+        </div>
+
+        <p class="text-xs text-gray-400 mt-6 italic">Giai điệu In-Love ngọt ngào đang phát... ✨</p>
+      </div>
+    </section>
+
+    <!-- CHƯƠNG 2: MÔ PHỎNG CHUYẾN BAY & MỐC THỜI GIAN -->
+    <section id="page-2" class="page-screen hidden-right text-center">
+      <div class="bg-white/90 backdrop-blur-md rounded-3xl p-5 sm:p-7 shadow-xl border border-rose-100">
+        <span class="text-xs font-bold text-rose-500 uppercase tracking-wider block mb-1">Chương 2: Chuyến Bay Ngàn Cây Số</span>
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3">Khoảng Cách Không Xa Bằng Trái Tim</h2>
+
+        <div class="bg-gradient-to-r from-rose-50 via-pink-50 to-amber-50 rounded-2xl p-3 sm:p-4 border border-rose-100 mb-4 relative overflow-hidden">
+          <div class="flex items-center justify-between text-xs font-bold text-gray-600 mb-2 px-1">
+            <div class="text-left">
+              <span class="text-rose-500 block text-xs sm:text-sm">🇻🇳 Hà Nội</span>
+              <span id="vnTimeDisplay" class="font-mono text-gray-700 font-bold">--:--:--</span>
+            </div>
+            <div class="text-right">
+              <span class="text-rose-500 block text-xs sm:text-sm">🇨🇳 Trung Quốc</span>
+              <span id="cnTimeDisplay" class="font-mono text-gray-700 font-bold">--:--:--</span>
+            </div>
+          </div>
+
+          <div id="flightTrack" class="relative w-full h-8 bg-rose-100/70 rounded-full flex items-center px-2 cursor-pointer shadow-inner">
+            <div class="absolute left-3 right-3 border-t-2 border-dashed border-rose-300"></div>
+            <div id="flightPlane" class="absolute left-2 text-2xl transition-all duration-300 transform -translate-y-0.5 filter drop-shadow hover:scale-125">
+              ✈️
+            </div>
+          </div>
+          <p id="flightPrompt" class="text-[11px] text-rose-500 font-semibold mt-2 animate-pulse">👉 Chạm vào đường ray để lái máy bay bay sang thăm cậu!</p>
+        </div>
+
+        <!-- Mốc 08/03/2026 -->
+        <div class="bg-rose-50/70 border border-rose-200/80 rounded-2xl p-3 mb-2.5 text-left flex items-center gap-3">
+          <span class="text-2xl flex-shrink-0">🫂</span>
+          <div>
+            <span class="text-[11px] uppercase tracking-wide text-rose-600 font-bold block">08/03/2026 — Cái Ôm Đầu Tiên</span>
+            <p class="text-xs text-gray-600 leading-snug">
+              Cái ôm vụng về nhưng ấm áp ngập tràn con tim, tiền đề cho câu trả lời ngọt ngào 2 ngày sau đó.
+            </p>
+          </div>
+        </div>
+
+        <!-- Mốc 10/03/2026 -->
+        <div class="mb-2.5">
+          <div class="text-[11px] uppercase tracking-wide text-rose-500 font-bold mb-1">❤️ CHÚNG MÌNH BÊN NHAU (TỪ 10/03/2026)</div>
+          <div class="grid grid-cols-4 gap-2">
+            <div class="bg-rose-50/80 rounded-xl p-2 border border-rose-100">
+              <span id="dayVal" class="text-lg sm:text-xl font-bold text-rose-600 block">0</span>
+              <span class="text-[9px] text-gray-400 uppercase font-semibold">Ngày</span>
+            </div>
+            <div class="bg-rose-50/80 rounded-xl p-2 border border-rose-100">
+              <span id="hourVal" class="text-lg sm:text-xl font-bold text-rose-600 block">0</span>
+              <span class="text-[9px] text-gray-400 uppercase font-semibold">Giờ</span>
+            </div>
+            <div class="bg-rose-50/80 rounded-xl p-2 border border-rose-100">
+              <span id="minVal" class="text-lg sm:text-xl font-bold text-rose-600 block">0</span>
+              <span class="text-[9px] text-gray-400 uppercase font-semibold">Phút</span>
+            </div>
+            <div class="bg-rose-50/80 rounded-xl p-2 border border-rose-100">
+              <span id="secVal" class="text-lg sm:text-xl font-bold text-rose-600 block">0</span>
+              <span class="text-[9px] text-gray-400 uppercase font-semibold">Giây</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mốc 18/08/2026 -->
+        <div class="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-3 mb-5">
+          <div class="text-[11px] uppercase tracking-wide text-amber-700 font-bold mb-0.5">✈️ CẬU ĐI DU HỌC (TỪ 18/08/2026)</div>
+          <p class="text-xs text-amber-800 leading-relaxed font-medium">
+            Cô gái kiên cường đã tự lập nơi đất khách được <span id="studyDaysVal" class="font-bold text-rose-600 text-sm">--</span> ngày rồi đó! Mỗi ngày cậu đều đang làm rất tuyệt vời ✨
+          </p>
+        </div>
+
+        <div class="flex gap-3">
+          <button onclick="changePage(1)" class="w-1/3 py-3 rounded-full text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 active:scale-95 transition">Quay lại</button>
+          <button onclick="changePage(3)" class="w-2/3 py-3 rounded-full text-xs font-bold bg-rose-500 text-white shadow-lg shadow-rose-200 hover:bg-rose-600 active:scale-95 transition">Xem Album Kỷ Niệm ➔</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         CHƯƠNG 3: KHUNG ẢNH DỌC DÀI HƠN CHUẨN CHÂN DUNG (PORTRAIT RATIO)
+         ========================================== -->
+    <section id="page-3" class="page-screen hidden-right text-center">
+      <div class="bg-white/90 backdrop-blur-md rounded-3xl p-5 sm:p-7 shadow-xl border border-rose-100">
+        
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs font-bold text-rose-500 uppercase tracking-wider">Chương 3: Từng Khoảnh Khắc Bên Nhau</span>
+          <span id="photoBadge" class="text-[10px] font-bold text-rose-600 bg-rose-100 px-2.5 py-0.5 rounded-full">Ảnh 1/4</span>
+        </div>
+        
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-1">Góc Lưu Giữ Kỷ Niệm</h2>
+        
+        <p id="flipGuideHint" class="text-xs text-rose-500 font-bold mb-3 flex items-center justify-center gap-1 animate-bounce">
+          <span>👉</span> <span>Chạm vào ảnh để mở lời nhắn bí mật ở mặt sau!</span>
+        </p>
+
+        <!-- Khung 3D Polaroid Card được tăng chiều cao để ảnh dài và thanh thoát hơn -->
+        <div class="perspective-1000 max-w-xs sm:max-w-sm mx-auto mb-4">
+          <div id="polaroid3DCard" class="polaroid-card relative w-full h-[410px] sm:h-[450px] transform-style-preserve-3d cursor-pointer">
+            
+            <!-- MẶT TRƯỚC (ẢNH KỶ NIỆM HIỂN THỊ DỌC DÀI HƠN) -->
+            <div class="absolute inset-0 bg-white p-3 sm:p-4 rounded-2xl border border-gray-100 shadow-md backface-hidden flex flex-col justify-between">
+              <div class="w-full h-72 sm:h-80 rounded-xl overflow-hidden bg-rose-50 relative flex items-center justify-center">
+                <img id="polaroidImg" src="anh1.jpg" alt="Kỷ niệm" class="w-full h-full object-cover">
+                <div class="absolute bottom-2 right-2 bg-black/55 backdrop-blur-sm text-white text-[10px] px-2.5 py-1 rounded-full font-medium shadow-sm">
+                  Chạm để lật 🔄
+                </div>
+              </div>
+              <div class="pt-2 pb-1 text-center">
+                <h4 id="polaroidDate" class="text-xs font-bold text-rose-500">08/03/2026</h4>
+                <p id="polaroidCaption" class="text-sm sm:text-base text-gray-700 mt-0.5 font-handwriting leading-tight">"Cái ôm đầu tiên vụng về, tim đập thình thịch mà ấm áp vô cùng."</p>
+              </div>
+            </div>
+
+            <!-- MẶT SAU (LỜI NHẮN VIẾT TAY) -->
+            <div class="absolute inset-0 bg-gradient-to-br from-rose-50 to-pink-100 p-6 sm:p-8 rounded-2xl border-2 border-dashed border-rose-200 shadow-md backface-hidden rotate-y-180 flex flex-col justify-between items-center text-center">
+              <div class="w-full">
+                <span class="text-3xl mb-1 block">💌</span>
+                <h4 class="text-xs font-bold uppercase tracking-wider text-rose-500 mb-1">Dòng thư mặt sau</h4>
+              </div>
+              
+              <p id="polaroidBackNote" class="text-base sm:text-xl font-handwriting text-gray-800 leading-relaxed px-2">
+                "Lúc ôm cậu, tớ chỉ ước đồng hồ ngừng trôi một chút để giữ mãi sự ấm áp này..."
+              </p>
+
+              <div class="w-full text-center">
+                <span class="inline-block bg-white/80 border border-rose-200 text-rose-600 text-[11px] font-bold px-4 py-1.5 rounded-full shadow-sm">
+                  Chạm tiếp để sang ảnh sau ➔
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <label class="inline-block text-[11px] text-rose-500 bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-full cursor-pointer hover:bg-rose-100 transition mb-6 font-medium">
+          📷 Chọn ảnh của cậu để xem thử ngay
+          <input type="file" id="localPhotoInput" accept="image/*" class="hidden">
+        </label>
+
+        <div class="flex gap-3">
+          <button onclick="changePage(2)" class="w-1/3 py-3 rounded-full text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 active:scale-95 transition">Quay lại</button>
+          <button onclick="changePage(4)" class="w-2/3 py-3 rounded-full text-xs font-bold bg-rose-500 text-white shadow-lg shadow-rose-200 hover:bg-rose-600 active:scale-95 transition">
+            Trạm Tiếp Năng Lượng ➔
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHƯƠNG 4: THẺ CÀO DU HỌC -->
+    <section id="page-4" class="page-screen hidden-right text-center">
+      <div class="bg-white/90 backdrop-blur-md rounded-3xl p-5 sm:p-7 shadow-xl border border-rose-100">
+        
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs font-bold text-rose-500 uppercase tracking-wider">Chương 4: Trạm Tiếp Sức Xuyên Biên Giới</span>
+          <span id="cardProgressBadge" class="text-[10px] font-bold text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full">Quẻ 1/4</span>
+        </div>
+        
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-1">Thẻ Cào May Mắn Cho Cậu</h2>
+        <p id="scratchGuideText" class="text-xs text-gray-500 mb-3">Cào nhẹ lớp phủ để mở quẻ (Cào trên 70% sẽ mở lời nhắn nhé)!</p>
+
+        <!-- Thẻ cào Canvas -->
+        <div class="relative w-full max-w-xs sm:max-w-sm mx-auto h-36 rounded-2xl overflow-hidden shadow-inner border-2 border-rose-200 mb-2 bg-gradient-to-br from-amber-50 to-rose-50 flex items-center justify-center p-4">
+          <div id="scratchSecretMessage" class="text-center select-none">
+            <p id="scratchZh" class="text-sm sm:text-base font-bold text-rose-600">无论距离多远，我的心永远陪着你。</p>
+            <p id="scratchPy" class="text-[10px] sm:text-[11px] text-rose-400 font-mono mt-0.5">Wúlùn jùlí duō yuǎn, wǒ de xīn yǒngyuǎn péi zhe nǐ.</p>
+            <p id="scratchVi" class="text-xs text-gray-600 italic mt-1">"Dù khoảng cách có xa bao nhiêu, trái tim tớ vẫn luôn ở bên cậu."</p>
+          </div>
+          <canvas id="scratchCanvas" class="absolute inset-0 w-full h-full cursor-pointer z-10"></canvas>
+        </div>
+
+        <!-- Thanh đếm thời gian 5s -->
+        <div id="scratchTimerContainer" class="w-full max-w-xs sm:max-w-sm mx-auto hidden mb-3">
+          <div class="w-full bg-rose-100 h-1.5 rounded-full overflow-hidden mb-1.5">
+            <div id="scratchTimerBar" class="bg-rose-500 h-full w-0 transition-all duration-100 ease-linear"></div>
+          </div>
+          <div class="flex items-center justify-between text-[11px]">
+            <span id="scratchCountdownText" class="text-gray-400">Đang đọc lời nhắn (5s)...</span>
+            <button id="skipNextScratchBtn" class="text-rose-600 font-bold underline hover:text-rose-700">
+              Sang quẻ tiếp ➔
+            </button>
+          </div>
+        </div>
+
+        <div id="scratchProgressInfo" class="w-full max-w-xs sm:max-w-sm mx-auto flex items-center justify-between text-[11px] text-gray-400 mb-4 px-1">
+          <span>Tiến độ cào: <strong id="scratchPercentText" class="text-rose-500 font-bold">0%</strong></span>
+          <span id="scratchStatusNote" class="text-rose-400 italic">Cào thêm xíu nữa nha...</span>
+        </div>
+
+        <!-- Bể chứa nỗi nhớ -->
+        <div class="bg-rose-50/80 rounded-2xl p-4 border border-rose-100 mb-6">
+          <div class="flex justify-between items-center text-xs font-bold mb-1">
+            <span class="text-gray-600">Bể chứa nỗi nhớ xuyên biên giới</span>
+            <span id="reservoirPercent" class="text-rose-600 font-bold">10%</span>
+          </div>
+          <div class="w-full h-3 bg-gray-200 rounded-full overflow-hidden mb-3">
+            <div id="reservoirBar" class="h-full bg-gradient-to-r from-rose-400 to-pink-500 transition-all duration-300" style="width: 10%;"></div>
+          </div>
+
+          <button id="heartBlastBtn" class="w-full bg-gradient-to-r from-rose-500 to-pink-500 text-white font-bold py-3.5 px-6 rounded-full shadow-lg shadow-rose-300/60 active:scale-95 transition flex items-center justify-center gap-2 text-xs">
+            <span>💖</span> Bắn tim sang Trung Quốc cho cậu (<span id="heartsDelivered">0</span>)
+          </button>
+        </div>
+
+        <div class="flex gap-3">
+          <button onclick="changePage(3)" class="w-1/3 py-3 rounded-full text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 active:scale-95 transition">Quay lại</button>
+          <button onclick="changePage(5)" class="w-2/3 py-3 rounded-full text-xs font-bold bg-rose-500 text-white shadow-lg shadow-rose-200 hover:bg-rose-600 active:scale-95 transition">Tâm Thư Bí Mật ➔</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHƯƠNG 5: TÂM THƯ BÍ MẬT & HỘP QUÀ ĐỂ DÀNH LÚC CẬU VỀ -->
+    <section id="page-5" class="page-screen hidden-right text-center">
+      <div class="bg-white/90 backdrop-blur-md rounded-3xl p-5 sm:p-7 shadow-xl border border-rose-100">
+        <span class="text-xs font-bold text-rose-500 uppercase tracking-wider block mb-1">CHƯƠNG CUỐI: LỜI HỨA CHÂN THÀNH</span>
+        <h2 class="text-2xl sm:text-4xl font-handwriting text-rose-600 font-bold mb-3 tracking-wide">Gửi Người Tớ Yêu Nhất</h2>
+
+        <div class="bg-amber-50/80 rounded-2xl p-4 sm:p-5 border border-amber-200/70 text-left text-xs sm:text-sm leading-relaxed text-gray-700 mb-5 space-y-3 shadow-sm min-h-[250px]">
+          <p class="font-bold text-rose-600 text-sm">Gửi cậu,</p>
+          <p id="typewriterParagraph1"></p>
+          <p id="typewriterParagraph2"></p>
+          <p id="typewriterParagraph3"></p>
+          <p id="typewriterParagraph4"></p>
+          <p id="typewriterSignature" class="text-right font-handwriting text-xl sm:text-2xl text-rose-600 font-bold pt-1 opacity-0 transition-opacity duration-1000">
+            — Tớ yêu cậu rất nhiều 💖
+          </p>
+        </div>
+
+        <button id="surpriseGiftBtn" class="w-full sm:w-auto bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-gray-300 text-gray-400 font-bold py-3.5 px-6 rounded-full shadow-sm transition-all flex items-center justify-center gap-2 mx-auto mb-5 text-xs opacity-50 cursor-not-allowed">
+          <span id="giftIcon" class="text-base">🔒</span> 
+          <span id="giftBtnText">Đang viết tâm thư gửi cậu...</span>
+        </button>
+
+        <div class="flex gap-3">
+          <button onclick="changePage(4)" class="w-1/3 py-3 rounded-full text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 active:scale-95 transition">Quay lại</button>
+          <button onclick="changePage(1)" class="w-2/3 py-3 rounded-full text-xs font-bold bg-rose-500 text-white shadow-lg shadow-rose-200 hover:bg-rose-600 active:scale-95 transition">Đọc lại từ đầu ✨</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL POPUP HỘP QUÀ NIÊM PHONG HẸN NGÀY VỀ -->
+  <div id="giftModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 hidden transition-opacity duration-300">
+    <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl border-2 border-rose-200 transform scale-95 transition-transform duration-300 relative">
+      
+      <div class="w-16 h-16 sm:w-20 sm:h-20 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl sm:text-4xl shadow-inner border border-rose-200 animate-pulse">
+        🔒
+      </div>
+
+      <span class="text-[10px] font-bold uppercase tracking-widest text-rose-500 bg-rose-50 px-3 py-1 rounded-full border border-rose-200">
+        NIÊM PHONG ĐẶC BIỆT
+      </span>
+
+      <h3 class="text-xl sm:text-2xl font-bold text-gray-800 mt-3 mb-2 font-handwriting">Để Dành Tới Lúc Cậu Về!</h3>
+
+      <p class="text-xs text-gray-600 leading-relaxed mb-5 font-normal">
+        Món quà này tớ đã chuẩn bị và cất giữ cẩn thận ở quê nhà. Tớ sẽ không bật mí trước đâu, phải đợi đến ngày ra sân bay đón cậu về, nhìn thấy cậu cười và trao tận tay cậu cơ!
+      </p>
+
+      <div class="bg-amber-50 rounded-2xl p-3 border border-amber-200 text-xs text-amber-800 mb-5 font-medium">
+        ✈️ Hứa với tớ là giữ gìn sức khoẻ thật tốt để ngày gặp lại thật rạng rỡ nhé!
+      </div>
+
+      <button id="closeGiftModalBtn" class="w-full bg-rose-500 text-white text-xs font-bold py-3.5 rounded-full shadow-lg shadow-rose-300 hover:bg-rose-600 active:scale-95 transition">
+        Tớ hứa sẽ giữ gìn sức khoẻ ❤️
+      </button>
+
+    </div>
+  </div>
+
+  <footer class="relative z-30 pb-4 flex justify-center items-center gap-2">
+    <div id="dot-1" class="w-6 h-2 rounded-full bg-rose-500 transition-all"></div>
+    <div id="dot-2" class="w-2 h-2 rounded-full bg-gray-300 transition-all"></div>
+    <div id="dot-3" class="w-2 h-2 rounded-full bg-gray-300 transition-all"></div>
+    <div id="dot-4" class="w-2 h-2 rounded-full bg-gray-300 transition-all"></div>
+    <div id="dot-5" class="w-2 h-2 rounded-full bg-gray-300 transition-all"></div>
+  </footer>
+
+  <script>
+    /* ==========================================================
+       1. HỆ THỐNG PHÁT NHẠC
+       ========================================================== */
+    const audioPlayer = document.getElementById("customAudio");
+    const musicBtn = document.getElementById("musicBtn");
+    const musicDisc = document.getElementById("musicDiscIcon");
+    const musicText = document.getElementById("musicText");
+    const localAudioInput = document.getElementById("localAudioInput");
+    const startOverlay = document.getElementById("startOverlay");
+
+    let isMusicPlaying = false;
+    let fallbackOsc = null;
+
+    function playFallbackMelody() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioCtx();
+        const notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 523.25];
+        const seq = [2, 4, 5, 4, 2, 0, 1, 3, 4, 2];
+        let step = 0;
+        function loop() {
+          if (!isMusicPlaying) return;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(notes[seq[step]], ctx.currentTime);
+          gain.gain.setValueAtTime(0.001, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.05, ctx.currentTime + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.6);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.6);
+          step = (step + 1) % seq.length;
+          fallbackOsc = setTimeout(loop, 650);
+        }
+        loop();
+      } catch(e) {}
+    }
+
+    function startMusic() {
+      if (isMusicPlaying) return;
+      isMusicPlaying = true;
+      musicDisc.classList.add("spin-music");
+      musicText.innerText = "Tắt nhạc";
+
+      audioPlayer.play().catch(err => {
+        playFallbackMelody();
+      });
+    }
+
+    function toggleCustomMusic() {
+      if (isMusicPlaying) {
+        audioPlayer.pause();
+        clearTimeout(fallbackOsc);
+        isMusicPlaying = false;
+        musicDisc.classList.remove("spin-music");
+        musicText.innerText = "Bật nhạc";
+      } else {
+        startMusic();
+      }
+    }
+
+    startOverlay.addEventListener("click", () => {
+      startMusic();
+      confetti({ particleCount: 40, spread: 70, origin: { y: 0.6 } });
+      startOverlay.style.opacity = "0";
+      setTimeout(() => {
+        startOverlay.style.display = "none";
+      }, 700);
+    });
+
+    musicBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleCustomMusic();
+    });
+
+    localAudioInput.addEventListener("change", function(e) {
+      if (this.files && this.files[0]) {
+        clearTimeout(fallbackOsc);
+        const fileURL = URL.createObjectURL(this.files[0]);
+        audioPlayer.src = fileURL;
+        isMusicPlaying = false;
+        startMusic();
+      }
+    });
+
+    /* ==========================================================
+       2. CHUYỂN TRANG
+       ========================================================== */
+    let currentPage = 1;
+    const totalPages = 5;
+
+    function changePage(targetPage) {
+      if (targetPage === currentPage || targetPage < 1 || targetPage > totalPages) return;
+      
+      const currentEl = document.getElementById(`page-${currentPage}`);
+      const targetEl = document.getElementById(`page-${targetPage}`);
+
+      if (targetPage > currentPage) {
+        currentEl.className = "page-screen hidden-left";
+        targetEl.className = "page-screen hidden-right";
+      } else {
+        currentEl.className = "page-screen hidden-right";
+        targetEl.className = "page-screen hidden-left";
+      }
+
+      setTimeout(() => {
+        targetEl.className = "page-screen active";
+      }, 40);
+
+      currentPage = targetPage;
+      document.getElementById("chapterBadge").innerText = `Chương ${currentPage}/${totalPages}`;
+
+      for (let i = 1; i <= totalPages; i++) {
+        const dot = document.getElementById(`dot-${i}`);
+        if (i === currentPage) {
+          dot.className = "w-6 h-2 rounded-full bg-rose-500 transition-all";
+        } else {
+          dot.className = "w-2 h-2 rounded-full bg-gray-300 transition-all";
+        }
+      }
+
+      if (currentPage === 5) {
+        triggerTypewriter();
+      }
+    }
+
+    document.getElementById("openLetterBtn").addEventListener("click", () => {
+      confetti({ particleCount: 30, spread: 60, origin: { y: 0.6 } });
+      changePage(2);
+    });
+
+    /* ==========================================================
+       3. ĐẾM NGÀY LINH HOẠT & ĐỒNG HỒ MÚI GIỜ
+       ========================================================== */
+    const START_DATE = new Date("2026-03-10T00:00:00+07:00").getTime();
+    const DEPARTURE_DATE = new Date("2026-08-18T00:00:00+07:00").getTime();
+    let currentDaysAway = 42;
+
+    function updateClocksAndTimer() {
+      const now = new Date();
+
+      const vnTime = new Intl.DateTimeFormat("vi-VN", {
+        timeZone: "Asia/Ho_Chi_Minh",
+        hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
+      }).format(now);
+
+      const cnTime = new Intl.DateTimeFormat("zh-CN", {
+        timeZone: "Asia/Shanghai",
+        hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
+      }).format(now);
+
+      const vnEl = document.getElementById("vnTimeDisplay");
+      const cnEl = document.getElementById("cnTimeDisplay");
+      if (vnEl) vnEl.innerText = vnTime;
+      if (cnEl) cnEl.innerText = cnTime;
+
+      // Đếm ngày yêu
+      let diff = now.getTime() - START_DATE;
+      if (diff < 0) diff = 0;
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / 1000 / 60) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+
+      const dEl = document.getElementById("dayVal");
+      if (dEl) {
+        dEl.innerText = days;
+        document.getElementById("hourVal").innerText = hours;
+        document.getElementById("minVal").innerText = minutes;
+        document.getElementById("secVal").innerText = seconds;
+      }
+
+      // Đếm ngày xa nhau từ 18/08/2026
+      let diffAway = now.getTime() - DEPARTURE_DATE;
+      if (diffAway > 0) {
+        currentDaysAway = Math.floor(diffAway / (1000 * 60 * 60 * 24));
+      }
+
+      const studyDaysEl = document.getElementById("studyDaysVal");
+      if (studyDaysEl) studyDaysEl.innerText = currentDaysAway;
+    }
+    setInterval(updateClocksAndTimer, 1000);
+    updateClocksAndTimer();
+
+    /* ==========================================================
+       4. CHUYẾN BAY TƯƠNG TÁC
+       ========================================================== */
+    const flightTrack = document.getElementById("flightTrack");
+    const flightPlane = document.getElementById("flightPlane");
+    const flightPrompt = document.getElementById("flightPrompt");
+
+    flightTrack.addEventListener("click", (e) => {
+      const rect = flightTrack.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const progress = Math.max(10, Math.min(clickX, rect.width - 35));
+      flightPlane.style.left = `${progress}px`;
+
+      confetti({
+        particleCount: 15,
+        spread: 45,
+        origin: { x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight }
+      });
+
+      if (progress > rect.width * 0.6) {
+        flightPrompt.innerText = "🎉 Máy bay đã đáp xuống bên cậu an toàn!";
+      } else {
+        flightPrompt.innerText = "✈️ Đang bay qua những đám mây hướng về phía cậu...";
+      }
+    });
+
+    /* ==========================================================
+       5. CHƯƠNG 3: VÒNG LẶP VÔ HẠN (MẶT TRƯỚC ➔ MẶT SAU ➔ ẢNH MỚI)
+       ========================================================== */
+    const polaroidCard = document.getElementById("polaroid3DCard");
+    const flipGuideHint = document.getElementById("flipGuideHint");
+    const photoBadge = document.getElementById("photoBadge");
+
+    let isCardFlipped = false;
+
+    const photos = [
+      {
+        src: "anh1.jpg",
+        date: "08/03/2026",
+        caption: '"Cái ôm đầu tiên vụng về, tim đập thình thịch mà ấm áp vô cùng."',
+        note: '"Lúc ôm cậu, tớ chỉ ước đồng hồ ngừng trôi một chút để giữ mãi sự ấm áp này..."'
+      },
+      {
+        src: "anh2.jpg",
+        date: "10/03/2026",
+        caption: '"Ngày đầu tiên cậu gật đầu đồng ý, cả thế giới bỗng trở nên thật dịu dàng."',
+        note: '"Ngày hạnh phúc nhất đời tớ, chính thức được làm bạn đồng hành cùng cậu."'
+      },
+      {
+        src: "anh3.jpg",
+        date: "18/08/2026 — Ngày cậu lên đường",
+        caption: '"Cái ôm thật chặt ở sân bay và lời dặn dò giữ gìn sức khoẻ nơi xứ người."',
+        note: '"Tớ quay lưng bước đi mà mắt ươn ướt, tự nhủ lòng phải cố gắng thật nhiều để sớm gặp lại cậu."'
+      },
+      {
+        src: "anh4.jpg",
+        date: "Hành trình tại Trung Quốc",
+        caption: '"Cô gái mạnh mẽ, giỏi giang của tớ đang tự tin khám phá những chân trời mới."',
+        note: '"Dù khó khăn thế nào thì ở nhà vẫn luôn có một người dõi theo và tự hào về cậu."'
+      }
+    ];
+
+    let currentPhotoIdx = 0;
+
+    polaroidCard.addEventListener("click", () => {
+      if (!isCardFlipped) {
+        isCardFlipped = true;
+        polaroidCard.classList.add("flipped");
+        flipGuideHint.innerHTML = `<span>💌</span> <span>Chạm lần nữa để sang ảnh tiếp theo!</span>`;
+        flipGuideHint.classList.remove("animate-bounce");
+      } else {
+        isCardFlipped = false;
+        polaroidCard.classList.remove("flipped");
+        
+        currentPhotoIdx = (currentPhotoIdx + 1) % photos.length;
+        renderPhoto(currentPhotoIdx);
+
+        flipGuideHint.innerHTML = `<span>👉</span> <span>Chạm vào ảnh để mở lời nhắn bí mật ở mặt sau!</span>`;
+        flipGuideHint.classList.add("animate-bounce");
+      }
+    });
+
+    function renderPhoto(index) {
+      photoBadge.innerText = `Ảnh ${index + 1}/${photos.length}`;
+
+      const item = photos[index];
+      const imgEl = document.getElementById("polaroidImg");
+      const dateEl = document.getElementById("polaroidDate");
+      const capEl = document.getElementById("polaroidCaption");
+      const noteEl = document.getElementById("polaroidBackNote");
+
+      imgEl.style.opacity = "0.2";
+      setTimeout(() => {
+        imgEl.src = item.src;
+        dateEl.innerText = item.date;
+        capEl.innerText = item.caption;
+        noteEl.innerText = item.note;
+        imgEl.style.opacity = "1";
+      }, 150);
+    }
+
+    document.getElementById("localPhotoInput").addEventListener("change", function(e) {
+      if (this.files && this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          photos.push({
+            src: evt.target.result,
+            date: "Kỷ niệm mới tải lên",
+            caption: '"Ảnh xinh của cậu vừa được thêm vào trang kỷ niệm!"',
+            note: '"Mỗi khoảnh khắc có cậu đều là một trang ký ức tuyệt vời."'
+          });
+          currentPhotoIdx = photos.length - 1;
+          isCardFlipped = false;
+          polaroidCard.classList.remove("flipped");
+          renderPhoto(currentPhotoIdx);
+        };
+        reader.readAsDataURL(this.files[0]);
+      }
+    });
+
+    /* ==========================================================
+       6. THẺ CÀO DU HỌC: LƯU LẠI ĐÚNG 5 GIÂY
+       ========================================================== */
+    const scratchCanvas = document.getElementById("scratchCanvas");
+    const sctx = scratchCanvas.getContext("2d");
+    let isScratching = false;
+    let isCardCompleted = false;
+
+    let scratchTimerTimeout = null;
+    let scratchTimerInterval = null;
+
+    const fortunes = [
+      {
+        zh: "无论距离多远，我的心永远陪着你。",
+        py: "Wúlùn jùlí duō yuǎn, wǒ de xīn yǒngyuǎn péi zhe nǐ.",
+        vi: "Dù khoảng cách có xa bao nhiêu, trái tim tớ vẫn luôn ở bên cậu."
+      },
+      {
+        zh: "刚到一个新地方，慢慢适应，你已经很棒了！",
+        py: "Gāng dào yí gè xīn dìfāng, mànmàn shìyìng, nǐ yǐjīng hěn bàng le!",
+        vi: "Mới sang nơi ở mới, cứ từ từ làm quen nhé, cậu đã làm rất tốt rồi!"
+      },
+      {
+        zh: "今天也要按时吃饭，照顾好自己哦！",
+        py: "Jīntiān yě yào ànshí chīfàn, zhàogù hǎo zìjǐ o!",
+        vi: "Hôm nay nhớ ăn cơm đúng giờ và chăm sóc bản thân thật tốt nhé!"
+      },
+      {
+        zh: "你是我最骄傲的女孩，加油！",
+        py: "Nǐ shì wǒ zuì jiāo'ào de nǚhái, jiāyóu!",
+        vi: "Cậu là cô gái khiến tớ tự hào nhất, cố lên nha!"
+      }
+    ];
+
+    let fortuneIndex = 0;
+    const toast = document.getElementById("scratchToast");
+    const toastMsg = document.getElementById("toastMsg");
+    const toastIcon = document.getElementById("toastIcon");
+
+    const timerContainer = document.getElementById("scratchTimerContainer");
+    const timerBar = document.getElementById("scratchTimerBar");
+    const countdownTxt = document.getElementById("scratchCountdownText");
+    const skipBtn = document.getElementById("skipNextScratchBtn");
+
+    function showToast(msg, icon = "🎉", duration = 2500) {
+      toastMsg.innerText = msg;
+      toastIcon.innerText = icon;
+      toast.classList.remove("hidden");
+      setTimeout(() => {
+        toast.classList.add("hidden");
+      }, duration);
+    }
+
+    function initScratchCard() {
+      isCardCompleted = false;
+      clearTimeout(scratchTimerTimeout);
+      clearInterval(scratchTimerInterval);
+      timerContainer.classList.add("hidden");
+      timerBar.style.width = "0%";
+
+      document.getElementById("scratchProgressInfo").classList.remove("hidden");
+      document.getElementById("scratchPercentText").innerText = "0%";
+      document.getElementById("scratchStatusNote").innerText = "Cào thêm xíu nữa nha...";
+      document.getElementById("cardProgressBadge").innerText = `Quẻ ${fortuneIndex + 1}/${fortunes.length}`;
+
+      const rect = scratchCanvas.getBoundingClientRect();
+      scratchCanvas.width = rect.width;
+      scratchCanvas.height = rect.height;
+
+      sctx.globalCompositeOperation = "source-over";
+      const grad = sctx.createLinearGradient(0, 0, rect.width, rect.height);
+      grad.addColorStop(0, "#fbcfe8");
+      grad.addColorStop(1, "#f472b6");
+      sctx.fillStyle = grad;
+      sctx.fillRect(0, 0, rect.width, rect.height);
+
+      sctx.fillStyle = "#ffffff";
+      sctx.font = "bold 13px 'Be Vietnam Pro', sans-serif";
+      sctx.textAlign = "center";
+      sctx.fillText("✨ Cào nhẹ lớp này để mở quẻ ✨", rect.width / 2, rect.height / 2 + 5);
+
+      sctx.globalCompositeOperation = "destination-out";
+    }
+
+    function goToNextFortune() {
+      clearTimeout(scratchTimerTimeout);
+      clearInterval(scratchTimerInterval);
+
+      if (fortuneIndex < fortunes.length - 1) {
+        fortuneIndex++;
+        const f = fortunes[fortuneIndex];
+        document.getElementById("scratchZh").innerText = f.zh;
+        document.getElementById("scratchPy").innerText = f.py;
+        document.getElementById("scratchVi").innerText = `"${f.vi}"`;
+        initScratchCard();
+        showToast(`Đã mở quẻ (${fortuneIndex + 1}/${fortunes.length})! Hãy cào tiếp nhé ✨`, "👉", 2200);
+      } else {
+        timerContainer.classList.add("hidden");
+        showToast("🎉 Cậu đã mở hết tất cả quẻ may mắn rồi! Luôn mạnh mẽ nhé 💖", "💖", 3500);
+        document.getElementById("scratchGuideText").innerText = "Cậu đã mở trọn vẹn 4 quẻ năng lượng rồi đó! ✨";
+      }
+    }
+
+    skipBtn.addEventListener("click", () => {
+      goToNextFortune();
+    });
+
+    function checkScratchPercentage() {
+      if (isCardCompleted) return;
+
+      const imgData = sctx.getImageData(0, 0, scratchCanvas.width, scratchCanvas.height);
+      const pixels = imgData.data;
+      let transparentPixels = 0;
+      const totalPixels = pixels.length / 4;
+
+      for (let i = 3; i < pixels.length; i += 16) {
+        if (pixels[i] < 128) {
+          transparentPixels += 4;
+        }
+      }
+
+      const percent = Math.min(100, Math.round((transparentPixels / totalPixels) * 100));
+      document.getElementById("scratchPercentText").innerText = `${percent}%`;
+
+      if (percent >= 70 && !isCardCompleted) {
+        isCardCompleted = true;
+        document.getElementById("scratchPercentText").innerText = "100%";
+        document.getElementById("scratchStatusNote").innerText = "Đã mở quẻ thành công! 🎉";
+        sctx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+
+        confetti({
+          particleCount: 35,
+          spread: 60,
+          origin: { y: 0.6 }
+        });
+
+        document.getElementById("scratchProgressInfo").classList.add("hidden");
+        timerContainer.classList.remove("hidden");
+
+        const readDuration = 5000;
+        const startTime = Date.now();
+
+        scratchTimerInterval = setInterval(() => {
+          const elapsed = Date.now() - startTime;
+          const prog = Math.min(100, (elapsed / readDuration) * 100);
+          timerBar.style.width = `${prog}%`;
+          const remainingSec = Math.max(0, Math.ceil((readDuration - elapsed) / 1000));
+          countdownTxt.innerText = `Đang đọc lời nhắn (${remainingSec}s)...`;
+
+          if (prog >= 100) {
+            clearInterval(scratchTimerInterval);
+          }
+        }, 100);
+
+        scratchTimerTimeout = setTimeout(() => {
+          goToNextFortune();
+        }, readDuration);
+      }
+    }
+
+    function scratch(e) {
+      if (!isScratching || isCardCompleted) return;
+      const rect = scratchCanvas.getBoundingClientRect();
+      const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+      const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+
+      sctx.beginPath();
+      sctx.arc(x, y, 18, 0, Math.PI * 2);
+      sctx.fill();
+
+      checkScratchPercentage();
+    }
+
+    scratchCanvas.addEventListener("mousedown", () => isScratching = true);
+    scratchCanvas.addEventListener("touchstart", () => isScratching = true);
+    window.addEventListener("mouseup", () => isScratching = false);
+    window.addEventListener("touchend", () => isScratching = false);
+    scratchCanvas.addEventListener("mousemove", scratch);
+    scratchCanvas.addEventListener("touchmove", scratch);
+
+    window.addEventListener("load", () => {
+      setTimeout(initScratchCard, 300);
+    });
+
+    /* ==========================================================
+       7. BỂ CHỨA NỖI NHỚ & BẮN TIM PHÁT NỔ
+       ========================================================== */
+    let heartCount = 0;
+    const heartBlastBtn = document.getElementById("heartBlastBtn");
+    const heartsDelivered = document.getElementById("heartsDelivered");
+    const reservoirBar = document.getElementById("reservoirBar");
+    const reservoirPercent = document.getElementById("reservoirPercent");
+
+    heartBlastBtn.addEventListener("click", (e) => {
+      heartCount += 1;
+      heartsDelivered.innerText = heartCount;
+
+      const newPercent = Math.min(100, 10 + heartCount * 5);
+      reservoirBar.style.width = `${newPercent}%`;
+      reservoirPercent.innerText = `${newPercent}%`;
+
+      const clientX = e.clientX || window.innerWidth / 2;
+      const clientY = e.clientY || window.innerHeight / 2;
+
+      for (let i = 0; i < 5; i++) {
+        const h = document.createElement("div");
+        h.className = "heart-float-particle text-2xl";
+        h.innerText = ['💖', '💕', '🌸', '✨', '❤️'][Math.floor(Math.random() * 5)];
+        h.style.left = `${clientX + (Math.random() - 0.5) * 60}px`;
+        h.style.top = `${clientY + (Math.random() - 0.5) * 30}px`;
+        document.body.appendChild(h);
+        setTimeout(() => h.remove(), 1400);
+      }
+
+      confetti({
+        particleCount: 18,
+        spread: 60,
+        origin: { x: clientX / window.innerWidth, y: clientY / window.innerHeight }
+      });
+    });
+
+    /* ==========================================================
+       8. TYPEWRITER EFFECT & MỞ KHÓA HỘP QUÀ KHI HOÀN TẤT
+       ========================================================== */
+    let typewriterDone = false;
+    let isGiftUnlocked = false;
+
+    const surpriseGiftBtn = document.getElementById("surpriseGiftBtn");
+    const giftIcon = document.getElementById("giftIcon");
+    const giftBtnText = document.getElementById("giftBtnText");
+
+    function unlockGiftBox() {
+      isGiftUnlocked = true;
+      surpriseGiftBtn.classList.remove("opacity-50", "cursor-not-allowed", "from-gray-100", "to-gray-200", "border-gray-300", "text-gray-400");
+      surpriseGiftBtn.classList.add("from-rose-50", "to-pink-50", "border-rose-300", "text-rose-600", "hover:shadow-lg", "active:scale-95", "cursor-pointer");
+      giftIcon.innerHTML = `<span class="animate-bounce inline-block text-xl">🎁</span>`;
+      giftBtnText.innerText = "Hộp quà bí mật (Để dành lúc cậu về)";
+
+      confetti({ particleCount: 35, spread: 60, origin: { y: 0.8 } });
+      showToast("Tâm thư đã xong! Cậu có thể mở hộp quà rồi nhé ✨", "🎁", 3000);
+    }
+
+    function typeLine(element, text, speed, callback) {
+      let i = 0;
+      element.innerHTML = "";
+      function step() {
+        if (i < text.length) {
+          element.innerHTML += text.charAt(i);
+          i++;
+          setTimeout(step, speed);
+        } else if (callback) {
+          callback();
+        }
+      }
+      step();
+    }
+
+    function triggerTypewriter() {
+      if (typewriterDone) return;
+      typewriterDone = true;
+
+      const p1 = document.getElementById("typewriterParagraph1");
+      const p2 = document.getElementById("typewriterParagraph2");
+      const p3 = document.getElementById("typewriterParagraph3");
+      const p4 = document.getElementById("typewriterParagraph4");
+      const sign = document.getElementById("typewriterSignature");
+
+      const t1 = `Đã ${currentDaysAway} ngày chúng ta phải tạm rời xa nhau... Có những lúc rất buồn, rất nhớ, cũng có cả những lúc chúng ta xích mích với nhau.`;
+      const t2 = `Nhưng trong lòng tớ, cậu vẫn mãi là cô gái tớ yêu thương nhất, là cô gái mạnh mẽ, giỏi giang nhất.`;
+      const t3 = `Tớ mong cậu ở bên ấy vẫn luôn giữ được dáng vẻ mạnh mẽ và cố gắng như ngày nào. Nhưng nếu có khó khăn quá, hay những lúc mệt mỏi, yếu lòng, hãy luôn nhớ rằng ở đây vẫn luôn có 1 người sẵn sàng chờ cậu.`;
+      const t4 = `Có lẽ ngày đầu tiên của năm mới 2027 chúng ta không thể ở cạnh nhau, nhưng tớ hy vọng những năm mới của tương lai chúng ta vẫn có thể ở bên nhau.`;
+
+      typeLine(p1, t1, 18, () => {
+        typeLine(p2, t2, 18, () => {
+          typeLine(p3, t3, 18, () => {
+            typeLine(p4, t4, 18, () => {
+              sign.classList.remove("opacity-0");
+              setTimeout(unlockGiftBox, 800);
+            });
+          });
+        });
+      });
+    }
+
+    const giftModal = document.getElementById("giftModal");
+    const closeGiftModalBtn = document.getElementById("closeGiftModalBtn");
+
+    surpriseGiftBtn.addEventListener("click", () => {
+      if (!isGiftUnlocked) {
+        showToast("Cậu đọc hết tâm thư trước đã nhé! 💌", "⏳", 2000);
+        return;
+      }
+      giftModal.classList.remove("hidden");
+      confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
+    });
+
+    closeGiftModalBtn.addEventListener("click", () => {
+      giftModal.classList.add("hidden");
+    });
+
+    giftModal.addEventListener("click", (e) => {
+      if (e.target === giftModal) {
+        giftModal.classList.add("hidden");
+      }
+    });
+
+    /* ==========================================================
+       9. CANVAS NỀN TRÁI TIM BAY BỒNG BỀNH
+       ========================================================== */
+    const canvas = document.getElementById("bgCanvas");
+    const ctx = canvas.getContext("2d");
+    let cw = canvas.width = window.innerWidth;
+    let ch = canvas.height = window.innerHeight;
+
+    window.addEventListener("resize", () => {
+      cw = canvas.width = window.innerWidth;
+      ch = canvas.height = window.innerHeight;
+    });
+
+    const hearts = Array.from({ length: 20 }).map(() => ({
+      x: Math.random() * cw,
+      y: Math.random() * ch,
+      size: Math.random() * 10 + 8,
+      speedY: Math.random() * 0.6 + 0.3,
+      speedX: (Math.random() - 0.5) * 0.3,
+      opacity: Math.random() * 0.35 + 0.15
+    }));
+
+    function drawMiniHeart(x, y, size, opacity) {
+      ctx.save();
+      ctx.globalAlpha = opacity;
+      ctx.fillStyle = "#ff6584";
+      ctx.beginPath();
+      const top = size * 0.3;
+      ctx.moveTo(x, y + top);
+      ctx.bezierCurveTo(x, y, x - size/2, y, x - size/2, y + top);
+      ctx.bezierCurveTo(x - size/2, y + (size + top)/2, x, y + size, x, y + size);
+      ctx.bezierCurveTo(x, y + size, x + size/2, y + (size + top)/2, x + size/2, y + top);
+      ctx.bezierCurveTo(x + size/2, y, x, y, x, y + top);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function loopHearts() {
+      ctx.clearRect(0, 0, cw, ch);
+      hearts.forEach(h => {
+        drawMiniHeart(h.x, h.y, h.size, h.opacity);
+        h.y -= h.speedY;
+        h.x += h.speedX;
+        if (h.y < -20) {
+          h.y = ch + 20;
+          h.x = Math.random() * cw;
+        }
+      });
+      requestAnimationFrame(loopHearts);
+    }
+    loopHearts();
+  </script>
+</body>
+</html>
